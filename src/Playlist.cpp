@@ -141,3 +141,14 @@ std::vector<AudioTrack*> Playlist::getTracks() const {
     }
     return tracks;
 }
+/** 
+Playlist::Playlist(const Playlist& other):
+head(nullptr), playlist_name(other.playlist_name), track_count(0){
+
+    PlaylistNode* curr_o = other.head;
+    PlaylistNode* tail_o = nullptr;
+
+    AudioTrack* copy_audio = new AudioTrack(*(curr_o->track));
+
+}
+    */
