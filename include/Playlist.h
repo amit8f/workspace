@@ -96,6 +96,8 @@ public:
      */
     std::vector<AudioTrack*> getTracks() const;
 
+    Playlist(const Playlist& other);
+
 };
 
 

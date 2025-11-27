@@ -141,14 +141,72 @@ std::vector<AudioTrack*> Playlist::getTracks() const {
     }
     return tracks;
 }
-/** 
-Playlist::Playlist(const Playlist& other):
-head(nullptr), playlist_name(other.playlist_name), track_count(0){
 
-    PlaylistNode* curr_o = other.head;
-    PlaylistNode* tail_o = nullptr;
+Playlist::Playlist(const Playlist& other): playlist_name(other.playlist_name), track_count(other.track_count), head(nullptr){
 
-    AudioTrack* copy_audio = new AudioTrack(*(curr_o->track));
-
+    PlaylistNode* sourceNode = other.head;
+    PlaylistNode* curr_tail = nullptr;
+    if (other.head != nullptr){
+        while(sourceNode != nullptr){   
+            
+            PointerWrapper<AudioTrack> cloned_track = sourceNode->track->clone();
+            AudioTrack* raw_track_ptr = cloned_track.release();
+            PlaylistNode* new_node = new PlaylistNode(raw_track_ptr);
+            //first insertion
+            if(head == nullptr){
+                head = new_node;
+                curr_tail = new_node;
+            }else{
+                curr_tail->next = new_node;
+                curr_tail = new_node;
+            }
+            sourceNode = sourceNode->next;
+        }
+    }
 }
-    */
+
+Playlist& Playlist::operator=(const Playlist& other)  {
+
+    if (&other != this){
+        this->playlist_name = other.playlist_name;
+        this->track_count = other.track_count;
+
+        PlaylistNode* curr = head;
+        PlaylistNode* next_node = nullptr;
+        while(curr != nullptr){
+            next_node = curr->next;
+            delete curr->track; 
+            delete curr;        
+            curr = next_node;
+        }
+        head = nullptr;
+        
+        if (other.head != nullptr){
+            playlist_name = other.playlist_name;
+            track_count = 0;
+
+            PlaylistNode* current_other = other.head;
+            PlaylistNode* tail_this = nullptr;
+
+            while (current_other) {
+                PointerWrapper<AudioTrack> cloned_wrapper = current_other->track->clone();
+                AudioTrack* new_track_copy = cloned_wrapper.release(); 
+        
+                PlaylistNode* new_node = new PlaylistNode(new_track_copy);
+        
+                if (head == nullptr) {
+                    head = new_node;
+                } else {
+                    tail_this->next = new_node;
+                }
+                tail_this = new_node;
+                track_count++;
+        
+                current_other = current_other->next;
+            }
+        }
+    }
+    return *this;
+}
+
+    

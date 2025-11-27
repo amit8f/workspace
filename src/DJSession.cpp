@@ -149,6 +149,52 @@ void DJSession::simulate_dj_performance() {
 
     std::cout << "TODO: Implement the DJ performance simulation workflow here." << std::endl;
     // Your implementation here
+    std::vector<std::string> playlist_names;
+    int i = 0;
+    if (play_all) {
+        for (const auto& pair : session_config.playlists) {
+            playlist_names.push_back(pair.first);
+        }
+        std::sort(playlist_names.begin(), playlist_names.end());
+    }
+
+    while (true) {
+        std::string current_playlist_name;
+        if (play_all) {
+            if (i >= playlist_names.size()) {
+                break; 
+            }
+            current_playlist_name = playlist_names[i];
+            i++;
+        } else {
+            current_playlist_name = display_playlist_menu_from_config();
+            if (current_playlist_name == "") {
+                break; // (Cancel)
+            }
+        }
+        
+        if (!load_playlist(current_playlist_name)) {
+            std::cout << "[ERROR] Could not load playlist: " << current_playlist_name << "\n";
+            continue;
+        }
+
+        for (const std::string& title : track_titles) {
+
+            std::cout << "\n--- Processing: " << title << " ---" << std::endl;
+            stats.tracks_processed++;
+
+            int cache_result = load_track_to_controller(title);
+
+            bool deck_success = load_track_to_mixer_deck(title);
+        }
+
+        print_session_summary();
+
+        stats = SessionStats(); 
+    }
+
+    std::cout << "Session cancelled by user or all playlists played." << std::endl;
+    
 }
 
 
