@@ -9,7 +9,7 @@
 
 
 DJSession::DJSession(const std::string& name, bool play_all)
-    : session_name(name), play_all(play_all) {
+    : session_name(name), library_service(), controller_service(), mixing_service(), config_manager(), session_config(), track_titles(), play_all(play_all), stats() {
     std::cout << "DJ Session System initialized: " << session_name << std::endl;
 }
 
@@ -72,7 +72,7 @@ int DJSession::load_track_to_controller(const std::string& track_name) {
     }
 
     int goal;
-    std::cout << "[System] Loading track " << track_name << " to controller... \n";
+    std::cout << "[System] Loading track '" << track_name << "' to controller...\n";
     goal = controller_service.loadTrackToCache(*track);
 
     if(goal == 1){
@@ -147,17 +147,18 @@ void DJSession::simulate_dj_performance() {
     std::cout << "Cache Capacity: " << session_config.controller_cache_size << " slots (LRU policy)" << std::endl;
     std::cout << "\n--- Processing Tracks ---" << std::endl;
 
-    std::cout << "TODO: Implement the DJ performance simulation workflow here." << std::endl;
     // Your implementation here
+    
     std::vector<std::string> playlist_names;
-    int i = 0;
+    size_t i = 0;
+
     if (play_all) {
         for (const auto& pair : session_config.playlists) {
             playlist_names.push_back(pair.first);
         }
-        std::sort(playlist_names.begin(), playlist_names.end());
     }
 
+    
     while (true) {
         std::string current_playlist_name;
         if (play_all) {
@@ -178,19 +179,25 @@ void DJSession::simulate_dj_performance() {
             continue;
         }
 
-        for (const std::string& title : track_titles) {
+        std::vector<std::string> track_titles_to_process = library_service.getTrackTitles();
+        std::reverse(track_titles_to_process.begin(), track_titles_to_process.end());
+
+        for (const std::string& title : track_titles_to_process) {
 
             std::cout << "\n--- Processing: " << title << " ---" << std::endl;
             stats.tracks_processed++;
 
-            int cache_result = load_track_to_controller(title);
+            load_track_to_controller(title);
+            controller_service.displayCacheStatus();
 
-            bool deck_success = load_track_to_mixer_deck(title);
+            load_track_to_mixer_deck(title);
+            mixing_service.displayDeckStatus();
+
         }
 
         print_session_summary();
 
-        stats = SessionStats(); 
+
     }
 
     std::cout << "Session cancelled by user or all playlists played." << std::endl;

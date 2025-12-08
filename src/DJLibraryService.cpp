@@ -8,7 +8,7 @@
 
 
 DJLibraryService::DJLibraryService(const Playlist& playlist) 
-    : playlist(playlist) {}
+    : playlist(playlist), library() {}
 /**
  * @brief Load a playlist from track indices referencing the library
  * @param library_tracks Vector of track info from config
@@ -24,15 +24,11 @@ void DJLibraryService::buildLibrary(const std::vector<SessionConfig::TrackInfo>&
 
             new_track = new MP3Track(track_name.title,track_name.artists,track_name.duration_seconds,track_name.bpm,bitrate,(bool)track_name.extra_param2);
 
-            std::cout << "MP3Track created:" << bitrate << "kbps" << "\n";
-
         }else if(track_name.type == "WAV"){
             int sample_rate = track_name.extra_param1;
             int bit_depth = track_name.extra_param2;
 
             new_track = new WAVTrack(track_name.title,track_name.artists,track_name.duration_seconds,track_name.bpm,sample_rate,bit_depth);
-
-            std::cout << "WAVTrack created:" << sample_rate << "Hz/" << bit_depth << "bit \n";
         }
 
         if(new_track){
@@ -40,7 +36,7 @@ void DJLibraryService::buildLibrary(const std::vector<SessionConfig::TrackInfo>&
             count++;
         }
     }
-    std::cout << "[INFO] Track library built:" << count << "tracks loaded \n";
+    std::cout << "[INFO] Track library built: " << count << " tracks loaded\n";
 }
 
 /**
@@ -89,29 +85,30 @@ void DJLibraryService::loadPlaylistFromIndices(const std::string& playlist_name,
     int count = 0;
     std::cout << "[INFO] Loading playlist: " << playlist_name << "\n";
     Playlist p(playlist_name);
-    this->playlist = std::move(p);
+    this->playlist = p;
 
-    for(int index : track_indices){
-        if(index <= 0 || index > library.size()){
-            std::cout << "[WARNING] Invalid track index: " << index << "\n";
-        }else{
+    for(const auto& index : track_indices){
+        if(index >= 1 || index <= ((int)library.size())){
+
             PointerWrapper<AudioTrack> cloned_track = library[index-1]->clone();
-            AudioTrack* raw_pointer_track = cloned_track.release(); //unwrap
+            //AudioTrack* raw_pointer_track = cloned_track.release(); //unwrap
 
-            if(raw_pointer_track == nullptr){
+            if(!cloned_track){
                 std::cout << "[ERROR] clone didnt work \n"; 
             }else{
-                raw_pointer_track->load();
-                raw_pointer_track->analyze_beatgrid();
+                cloned_track->load();
+                cloned_track->analyze_beatgrid();
 
-                this->playlist.add_track(raw_pointer_track);
+                playlist.add_track(cloned_track.release());
                 count++;
 
-                std::cout << "Added " << raw_pointer_track->get_title() << " to playlist " << playlist_name << "\n";
+                //std::cout << "Added " << raw_pointer_track->get_title() << " to playlist " << playlist_name << "\n";
             }
+        }else{
+            std::cout << "[WARNING] Invalid track index: " << index << "\n";
         }
     }
-    std::cout << "[INFO] Playlist loaded: " << playlist_name << "(" << count << "tracks) \n";
+    std::cout << "[INFO] Playlist loaded: " << playlist_name << " (" << count << " tracks)\n";
 }
 /**
  * TODO: Implement getTrackTitles method

@@ -43,7 +43,7 @@ public:
     /**
      * Copy Constructor
      */
-    //Playlist(const Playlist& other);
+    Playlist(const Playlist& other);
 
     /**
      * Copy Assignment Operator
@@ -96,7 +96,6 @@ public:
      */
     std::vector<AudioTrack*> getTracks() const;
 
-    Playlist(const Playlist& other);
 
 };
 
